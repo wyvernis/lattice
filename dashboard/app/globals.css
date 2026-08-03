@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --bg0: #0a0e12;
+  --bg1: #0f1419;
+  --line: rgba(139, 163, 184, 0.14);
+  --cyan: #3dd6c6;
+  --amber: #e8a838;
+  --coral: #e85d4c;
+}
+
+html, body {
+  background: var(--bg0);
+  color: #e8eef4;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(61, 214, 198, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(232, 168, 56, 0.08), transparent 45%),
+    linear-gradient(180deg, #0a0e12 0%, #0f1419 100%);
+  background-attachment: fixed;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+.live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(22, 29, 37, 0.9), rgba(15, 20, 25, 0.85));
+  backdrop-filter: blur(8px);
+}
+
+.react-flow__attribution {
+  display: none !important;
+}

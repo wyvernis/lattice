@@ -1,0 +1,29 @@
+# Binaries
+bin/
+*.exe
+*.test
+
+# Logs / local
+logs/
+*.log
+.env
+.env.*
+
+# Node
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+
+# Python
+services/benchmark/.venv/
+__pycache__/
+*.pyc
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/

@@ -1,0 +1,6 @@
+apiVersion: 1
+providers:
+  - name: lattice
+    folder: /var/lib/grafana/dashboards
+    type: file
+    updateIntervalSeconds: 30

@@ -1,0 +1,52 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request latency",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(lattice_request_latency_seconds_bucket[1m])) by (le, service))",
+          "legendFormat": "p95 {{service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tokens / sec",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "lattice_tokens_per_second", "legendFormat": "{{node}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "GPU utilization",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "lattice_gpu_utilization", "legendFormat": "{{node}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue depth",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "lattice_queue_depth", "legendFormat": "{{node}}" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["lattice"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "Lattice Inference",
+  "uid": "lattice-main",
+  "version": 1
+}

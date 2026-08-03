@@ -1,0 +1,30 @@
+replicaCount:
+  gateway: 2
+  router: 2
+  scheduler: 1
+  registry: 1
+  worker: 2
+
+image:
+  repository: lattice
+  tag: latest
+  pullPolicy: IfNotPresent
+
+apiKeys: lattice-dev-key
+jwtSecret: lattice-dev-secret-change-me
+clusterName: helm
+
+service:
+  gateway:
+    type: LoadBalancer
+    port: 80
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 60
+
+keda:
+  enabled: true
+  threshold: "10"

@@ -1,0 +1,28 @@
+default_policy: balanced
+routes:
+  coding:
+    - qwen2.5-coder-7b
+    - deepseek-coder-6.7b
+    - codellama-7b
+  reasoning:
+    - deepseek-r1-7b
+    - qwen2.5-32b
+    - llama3.1-8b
+  summarization:
+    - mistral-7b
+    - llama3.1-8b
+    - phi-3-mini
+  translation:
+    - aya-23-8b
+    - mistral-7b
+  vision:
+    - qwen2-vl-7b
+    - llava-1.6-7b
+  chat:
+    - llama3.1-8b
+    - mistral-7b
+    - phi-3-mini
+  embedding:
+    - nomic-embed-text
+    - bge-small-en
+overrides: {}

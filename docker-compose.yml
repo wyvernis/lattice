@@ -1,0 +1,191 @@
+version: "3.9"
+
+x-service: &service
+  restart: unless-stopped
+  networks: [lattice]
+
+services:
+  redis:
+    <<: *service
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  nats:
+    <<: *service
+    image: nats:2.10-alpine
+    command: ["-js", "-m", "8222"]
+    ports: ["4222:4222", "8222:8222"]
+
+  postgres:
+    <<: *service
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lattice
+      POSTGRES_PASSWORD: lattice
+      POSTGRES_DB: lattice
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  registry:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: registry }
+    environment:
+      HTTP_ADDR: ":8083"
+      NATS_URL: nats://nats:4222
+    ports: ["8083:8083"]
+    depends_on: [nats]
+
+  router:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: router }
+    environment:
+      HTTP_ADDR: ":8081"
+      NATS_URL: nats://nats:4222
+    ports: ["8081:8081"]
+    depends_on: [nats]
+
+  scheduler:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: scheduler }
+    environment:
+      HTTP_ADDR: ":8082"
+      NATS_URL: nats://nats:4222
+      CLUSTER_NAME: docker
+    ports: ["8082:8082"]
+    depends_on: [nats, redis]
+
+  worker:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: worker }
+    environment:
+      HTTP_ADDR: ":8084"
+      ADVERTISE_URL: http://worker:8084
+      NODE_ID: worker-1
+      SCHEDULER_URL: http://scheduler:8082
+      NATS_URL: nats://nats:4222
+      CLUSTER_NAME: docker
+      PROVIDER: docker
+    ports: ["8084:8084"]
+    depends_on: [scheduler, nats]
+
+  worker-2:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: worker }
+    environment:
+      HTTP_ADDR: ":8084"
+      ADVERTISE_URL: http://worker-2:8084
+      NODE_ID: worker-2
+      SCHEDULER_URL: http://scheduler:8082
+      NATS_URL: nats://nats:4222
+      CLUSTER_NAME: docker
+      PROVIDER: docker
+      GPU_NAME: Simulated-H100
+    depends_on: [scheduler, nats]
+
+  gateway:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: gateway }
+    environment:
+      HTTP_ADDR: ":8080"
+      ROUTER_URL: http://router:8081
+      SCHEDULER_URL: http://scheduler:8082
+      REGISTRY_URL: http://registry:8083
+      WORKER_URL: http://worker:8084
+      NATS_URL: nats://nats:4222
+      API_KEYS: lattice-dev-key
+      JWT_SECRET: lattice-dev-secret-change-me
+    ports: ["8080:8080"]
+    depends_on: [router, scheduler, worker]
+
+  chaos:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args: { SERVICE: chaos }
+    environment:
+      HTTP_ADDR: ":8085"
+      SCHEDULER_URL: http://scheduler:8082
+      GATEWAY_URL: http://gateway:8080
+      WORKER_URL: http://worker:8084
+      NATS_URL: nats://nats:4222
+    ports: ["8085:8085"]
+    depends_on: [gateway, worker]
+
+  benchmark:
+    <<: *service
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.benchmark
+    environment:
+      GATEWAY_URL: http://gateway:8080
+      API_KEYS: lattice-dev-key
+    ports: ["8090:8090"]
+    depends_on: [gateway]
+
+  dashboard:
+    <<: *service
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    environment:
+      SCHEDULER_URL: http://scheduler:8082
+      REGISTRY_URL: http://registry:8083
+      GATEWAY_URL: http://gateway:8080
+      CHAOS_URL: http://chaos:8085
+      NEXT_PUBLIC_SCHEDULER_WS: localhost:8082
+      NEXT_PUBLIC_API_KEY: lattice-dev-key
+    ports: ["3000:3000"]
+    depends_on: [scheduler, gateway, registry]
+
+  prometheus:
+    <<: *service
+    image: prom/prometheus:v2.55.0
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    depends_on: [gateway, worker, scheduler]
+
+  grafana:
+    <<: *service
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: lattice
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports: ["3001:3000"]
+    depends_on: [prometheus]
+
+  otel-collector:
+    <<: *service
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deploy/otel/config.yaml:/etc/otelcol/config.yaml:ro
+    ports: ["4318:4318", "4317:4317"]
+
+networks:
+  lattice:
+
+volumes:
+  pgdata:
